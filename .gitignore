@@ -1,1 +1,33 @@
+# Dependencies
 node_modules
+
+# Build output
+dist
+out
+build/Release
+
+# macOS
+.DS_Store
+*.dmg
+
+# Windows
+*.exe
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+
+# Environment
+.env
+.env.local
+
+# Electron
+*.asar
