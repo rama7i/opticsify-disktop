@@ -39,6 +39,7 @@
   "build": {
     "appId": "com.opticsify.desktop",
     "productName": "Opticsify Desktop",
+    "afterPack": "scripts/strip-media-usage-descriptions.js",
     "afterSign": "scripts/notarize.js",
     "directories": {
       "output": "dist",
@@ -67,6 +68,7 @@
     "mac": {
       "category": "public.app-category.business",
       "icon": "assets/icon.png",
+      "identity": null,
       "target": [
         {
           "target": "dmg",

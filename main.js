@@ -1,8 +1,9 @@
 // Add environment check for production
 const isDevelopment = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
-// Production debug flag - set to true to enable DevTools and debug logs
-const enableProductionDebug = true;
+// Production debug flag - keep false in production to avoid attaching the V8 inspector,
+// which triggers a crash in Electron 38's GC profiler (EXC_BREAKPOINT in CpuProfileNode).
+const enableProductionDebug = false;
 
 const { app, BrowserWindow, Menu, shell, dialog, ipcMain, Tray, nativeImage, globalShortcut } = require('electron');
 const { autoUpdater } = require('electron-updater');
@@ -10,6 +11,8 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const Store = require('electron-store');
+
+// Camera/media access is allowed - permission requests are handled per-session below.
 
 // Initialize store for persistent settings
 const store = new Store();
@@ -33,6 +36,7 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow;
 let tray = null;
 
+
 // URL-based navigation tracking (simpler approach to avoid cache miss)
 let urlNavigationStack = [];
 let currentUrlIndex = -1;
@@ -45,10 +49,9 @@ let lastSessionClearTime = 0;
 const SESSION_CLEAR_COOLDOWN = 5000; // Don't clear again within 5 seconds for same URL
 
 // Cookies that should be preserved during session clearing (user preferences)
+// Lang/user_lang are managed by the webapp - not preserved here to avoid conflicts
 const PRESERVED_COOKIES = [
-  'dont_show_all_videos',
-  'lang',
-  'user_lang'
+  'dont_show_all_videos'
 ];
 
 // Helper function to preserve and restore specific cookies during session clear
@@ -1831,14 +1834,6 @@ async function showSubdomainFormInMainWindow() {
               // Don't set Style - let web app control theme
             }
             
-            // Set language cookies both with and without prefix
-            document.cookie = 'lang=' + lang + '; path=/; max-age=31536000';
-            document.cookie = 'user_lang=' + lang + '; path=/; max-age=31536000';
-            if (subdomain) {
-              document.cookie = (storageKey + 'lang') + '=' + lang + '; path=/; max-age=31536000';
-              document.cookie = (storageKey + 'user_lang') + '=' + lang + '; path=/; max-age=31536000';
-            }
-            
             // Save to Electron store - CRITICAL for transferring to subdomain
             if (window.electronAPI && window.electronAPI.setLanguage) {
               try {
@@ -1876,14 +1871,6 @@ async function showSubdomainFormInMainWindow() {
               localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Lang', lang);
               localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Rtl', lang === 'ar' ? 'true' : 'false');
               // Don't set Style - let web app control theme
-            }
-            
-            // Set language cookies both with and without prefix
-            document.cookie = 'lang=' + lang + '; path=/; max-age=31536000';
-            document.cookie = 'user_lang=' + lang + '; path=/; max-age=31536000';
-            if (subdomain) {
-              document.cookie = (storageKey + 'lang') + '=' + lang + '; path=/; max-age=31536000';
-              document.cookie = (storageKey + 'user_lang') + '=' + lang + '; path=/; max-age=31536000';
             }
             
             // Save to Electron store to ensure persistence
@@ -3976,6 +3963,17 @@ function createWindow() {
   
   // Increase max listeners to prevent warnings for our legitimate event handlers
   mainWindow.webContents.setMaxListeners(20);
+  
+  // Allow camera/media and clipboard; deny everything else
+  mainWindow.webContents.session.setPermissionCheckHandler((webContents, permission) => {
+    const allowed = ['media', 'microphone', 'camera', 'clipboard-read', 'clipboard-sanitized-write'];
+    return allowed.includes(permission);
+  });
+
+  mainWindow.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+    const allowed = ['media', 'mediaKeySystem', 'clipboard-read', 'clipboard-sanitized-write'];
+    callback(allowed.includes(permission));
+  });
 
   //console.log('mainWindow created, preload path:', path.join(__dirname, 'preload.js'));
 
@@ -5035,6 +5033,7 @@ function createWindow() {
   mainWindow.webContents.on('did-finish-load', () => {
     ////console.log('Page loaded, back button injection enabled');
     
+    
     const currentUrl = mainWindow.webContents.getURL();
     console.log('');
     console.log('═══════════════════════════════════════════════════════════════');
@@ -5095,257 +5094,6 @@ function createWindow() {
           });
         }, 500);
       }
-      
-      // Transfer language preference from landing page to subdomain-specific storage
-      // Skip this on auth pages to avoid interfering with logout
-      if (!isAuthPage) {
-        mainWindow.webContents.executeJavaScript(`
-        (async function() {
-          try {
-            // Prevent double injection using sessionStorage (persists across reloads)
-            const injectionTimestamp = sessionStorage.getItem('__electronLanguageInjectTime');
-            const now = Date.now();
-            
-            if (injectionTimestamp) {
-              const timeSinceInjection = now - parseInt(injectionTimestamp);
-              if (timeSinceInjection < 1000) {
-                console.log('⏭️ [SKIP] Language script injected recently (' + timeSinceInjection + 'ms ago), skipping...');
-                return;
-              }
-            }
-            
-            // Update injection timestamp
-            sessionStorage.setItem('__electronLanguageInjectTime', now.toString());
-            
-            // Get the subdomain from current URL
-            const hostname = window.location.hostname;
-            const subdomain = hostname.split('.')[0];
-            
-            if (subdomain && subdomain !== 'opticsify') {
-              const storageKey = subdomain + '_';
-              
-              console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.log('🔧 [INIT] Subdomain detected:', subdomain);
-              console.log('🔧 [INIT] Storage key prefix:', storageKey);
-              console.log('🔧 [INIT] Current URL:', window.location.href);
-              console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              
-              // Get language from Electron store (this is the source of truth)
-              let savedLang = 'en';
-              const debugMode = ${isDevelopment || enableProductionDebug};
-              if (window.electronAPI && window.electronAPI.getLanguage) {
-                try {
-                  savedLang = await window.electronAPI.getLanguage() || 'en';
-                  if (debugMode) {
-                    console.log('Language retrieved from Electron store:', savedLang);
-                  }
-                } catch (e) {
-                  console.error('Error getting language from Electron store:', e);
-                }
-              }
-              
-              const savedRtl = savedLang === 'ar' ? 'true' : 'false';
-              
-              // Check if logout is in progress - if so, don't set localStorage
-              const logoutInProgress = sessionStorage.getItem('electron_logout_in_progress');
-              if (debugMode) {
-                console.log('🔍 [LOCALSTORAGE] Logout in progress flag:', logoutInProgress);
-              }
-              // If we're on a logged-in page (not login/logout), clear the logout flag
-              const isAuthPage = window.location.pathname.includes('/login') || 
-                                 window.location.pathname.includes('/logout') || 
-                                 window.location.pathname.includes('/sign-in') || 
-                                 window.location.pathname.includes('/signin') ||
-                                 window.location.pathname.includes('/auth/');
-              
-              if (!isAuthPage && logoutInProgress) {
-                if (debugMode) {
-                  console.log('✅ [LOCALSTORAGE] On logged-in page, clearing stale logout flag');
-                }
-                sessionStorage.removeItem('electron_logout_in_progress');
-              }
-              
-              if (logoutInProgress && isAuthPage) {
-                if (debugMode) {
-                  console.log('⚠️ [LOCALSTORAGE] Logout in progress on auth page - skipping localStorage initialization');
-                }
-                return;
-              }
-              
-              if (debugMode) {
-                console.log('✅ [LOCALSTORAGE] Proceeding with localStorage initialization');
-              }
-              
-              // Check if language has changed and we haven't reloaded yet
-              const currentLang = localStorage.getItem('templateCustomizer-vertical-menu-template--Lang');
-              const hasReloaded = sessionStorage.getItem('lang_reload_done');
-              
-              // Check if this is the first load (coming from landing page)
-              const isFirstLoad = !currentLang || !localStorage.getItem(storageKey + 'templateCustomizer-vertical-menu-template--Lang');
-              
-              // Only set language from Electron store on first load
-              // After that, let the web app control the language (it will sync back via the monitor)
-              if (isFirstLoad) {
-                console.log('📝 [FIRST LOAD] Initializing language from Electron store:', savedLang);
-                
-                // Set subdomain-specific storage
-                localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Lang', savedLang);
-                localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Rtl', savedRtl);
-                console.log('📝 [LOCALSTORAGE] Set subdomain Lang:', storageKey + 'templateCustomizer-vertical-menu-template--Lang', '=', savedLang);
-                console.log('📝 [LOCALSTORAGE] Set subdomain Rtl:', storageKey + 'templateCustomizer-vertical-menu-template--Rtl', '=', savedRtl);
-                
-                // Also set the non-prefixed keys (which the website reads)
-                localStorage.setItem('templateCustomizer-vertical-menu-template--Lang', savedLang);
-                localStorage.setItem('templateCustomizer-vertical-menu-template--Rtl', savedRtl);
-                console.log('📝 [LOCALSTORAGE] Set Lang:', savedLang);
-                console.log('📝 [LOCALSTORAGE] Set Rtl:', savedRtl);
-              } else {
-                console.log('📝 [EXISTING SESSION] Using existing language from localStorage:', currentLang);
-                // If the local language differs from Electron store, sync it back
-                if (currentLang !== savedLang) {
-                  console.log('📝 [SYNC] Updating Electron store with web app language:', currentLang);
-                  if (window.electronAPI && window.electronAPI.setLanguage) {
-                    window.electronAPI.setLanguage(currentLang).catch(err => {
-                      console.error('Error syncing language to Electron store:', err);
-                    });
-                  }
-                }
-              }
-              // Don't set Style - let web app control theme
-              
-              // Use the actual current language (either newly set or existing)
-              const activeLang = localStorage.getItem('templateCustomizer-vertical-menu-template--Lang') || savedLang;
-              const activeRtl = activeLang === 'ar' ? 'true' : 'false';
-              
-              // Set cookies with the active language
-              document.cookie = 'lang=' + activeLang + '; path=/; max-age=31536000';
-              document.cookie = 'user_lang=' + activeLang + '; path=/; max-age=31536000';
-              document.cookie = storageKey + 'lang=' + activeLang + '; path=/; max-age=31536000';
-              document.cookie = storageKey + 'user_lang=' + activeLang + '; path=/; max-age=31536000';
-              
-              console.log('Language preference loaded for subdomain ' + subdomain + ':', activeLang);
-              console.log('LocalStorage origin:', window.location.origin);
-              console.log('LocalStorage keys set:', Object.keys(localStorage));
-              
-              console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.log('✅ [STATE] Final localStorage state:');
-              console.log('   - Lang:', localStorage.getItem('templateCustomizer-vertical-menu-template--Lang'));
-              console.log('   - Rtl:', localStorage.getItem('templateCustomizer-vertical-menu-template--Rtl'));
-              console.log('   - Style:', localStorage.getItem('templateCustomizer-vertical-menu-template--Style'));
-              console.log('   - Subdomain Lang:', localStorage.getItem(storageKey + 'templateCustomizer-vertical-menu-template--Lang'));
-              console.log('   - Logout flag:', sessionStorage.getItem('electron_logout_in_progress'));
-              console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              
-              // Reload page if language ACTIVELY changed (not on first load) and we haven't reloaded yet
-              // Only reload if currentLang exists and is different (user changed language)
-              // Check for rapid successive reloads (within 2 seconds) to prevent double reload
-              const lastReloadTime = sessionStorage.getItem('lang_reload_timestamp');
-              const now = Date.now();
-              const timeSinceLastReload = lastReloadTime ? (now - parseInt(lastReloadTime)) : 999999;
-              
-              if (currentLang && currentLang !== activeLang && !hasReloaded && timeSinceLastReload > 2000) {
-                console.log('Language changed from', currentLang, 'to', activeLang, '- reloading page...');
-                sessionStorage.setItem('lang_reload_done', 'true');
-                sessionStorage.setItem('lang_reload_timestamp', now.toString());
-                window.location.reload();
-              } else if (hasReloaded && currentLang === activeLang) {
-                console.log('Page already reloaded and language matches, clearing reload flag for future navigations');
-                // Only clear the flag if language now matches (reload was successful)
-                sessionStorage.removeItem('lang_reload_done');
-                sessionStorage.removeItem('lang_reload_timestamp');
-              } else if (hasReloaded && currentLang !== activeLang) {
-                console.log('Page reloaded but language still different - keeping flag to prevent loops');
-                // Keep the flag to prevent infinite reload loops
-              } else if (timeSinceLastReload <= 2000) {
-                console.log('Reload blocked - too soon after last reload (preventing double reload)');
-              } else if (!currentLang) {
-                console.log('First load - language set to', savedLang, '(no reload needed)');
-              }
-            }
-          } catch (e) {
-            console.error('Error loading language preference:', e);
-          }
-        })();
-      `).catch(err => {
-        console.error('Error executing language transfer script:', err);
-      });
-      
-      // Monitor localStorage changes to sync language preferences
-      mainWindow.webContents.executeJavaScript(`
-        (function() {
-          try {
-            // Prevent double injection using sessionStorage
-            const syncInjectionTimestamp = sessionStorage.getItem('__electronLanguageSyncInjectTime');
-            const now = Date.now();
-            
-            if (syncInjectionTimestamp) {
-              const timeSinceSyncInjection = now - parseInt(syncInjectionTimestamp);
-              if (timeSinceSyncInjection < 1000) {
-                console.log('⏭️ [SKIP] Language sync injected recently (' + timeSinceSyncInjection + 'ms ago), skipping...');
-                return;
-              }
-            }
-            
-            // Update injection timestamp
-            sessionStorage.setItem('__electronLanguageSyncInjectTime', now.toString());
-            
-            const hostname = window.location.hostname;
-            const subdomain = hostname.split('.')[0];
-            
-            if (subdomain && subdomain !== 'opticsify') {
-              const storageKey = subdomain + '_';
-              
-              // Override localStorage.setItem to sync language changes
-              const originalSetItem = localStorage.setItem;
-              localStorage.setItem = function(key, value) {
-                // Check if logout is in progress - if so, don't sync to prevent restoration
-                const logoutInProgress = sessionStorage.getItem('electron_logout_in_progress');
-                if (logoutInProgress) {
-                  console.log('⚠️ [SYNC BLOCKED] Logout in progress - not syncing:', key);
-                  // Still call original setItem but don't sync
-                  return originalSetItem.call(this, key, value);
-                }
-                
-                // Call original setItem
-                originalSetItem.call(this, key, value);
-                
-                // If it's a language-related key without prefix, also save with subdomain prefix
-                // NOTE: We don't sync Style to let the web app control the theme
-                if (key === 'templateCustomizer-vertical-menu-template--Lang' ||
-                    key === 'templateCustomizer-vertical-menu-template--Rtl') {
-                  originalSetItem.call(this, storageKey + key, value);
-                  console.log('Synced language setting to subdomain storage:', storageKey + key, '=', value);
-                  
-                  // Also save to Electron store for persistence across origins
-                  if (key === 'templateCustomizer-vertical-menu-template--Lang') {
-                    if (window.electronAPI && window.electronAPI.setLanguage) {
-                      window.electronAPI.setLanguage(value).then(() => {
-                        console.log('Language saved to Electron store:', value);
-                      }).catch(err => {
-                        console.error('Error saving language to Electron store:', err);
-                      });
-                    }
-                    
-                    // Update cookies
-                    document.cookie = 'lang=' + value + '; path=/; max-age=31536000';
-                    document.cookie = 'user_lang=' + value + '; path=/; max-age=31536000';
-                    document.cookie = storageKey + 'lang=' + value + '; path=/; max-age=31536000';
-                    document.cookie = storageKey + 'user_lang=' + value + '; path=/; max-age=31536000';
-                  }
-                }
-              };
-              
-              console.log('Language sync monitor installed for subdomain:', subdomain);
-              console.log('Current localStorage origin:', window.location.origin);
-            }
-          } catch (e) {
-            console.error('Error installing language sync monitor:', e);
-          }
-        })();
-      `).catch(err => {
-        console.error('Error executing language sync monitor script:', err);
-      });
-      } // End of !isAuthPage check - skip localStorage injection on login/logout pages
       
       // Inject custom Omnes fonts from assets
       console.log('Injecting Omnes fonts for subdomain page...');
@@ -6526,6 +6274,23 @@ function createMenu() {
 
 // App event handlers
 app.whenReady().then(() => {
+  // Block all media device access globally BEFORE creating any windows
+  const { session } = require('electron');
+  const allSessions = [session.defaultSession, session.fromPartition('persist:opticsify-session')];
+  
+  allSessions.forEach(sess => {
+    // Allow camera/media and clipboard; deny everything else
+    sess.setPermissionCheckHandler((webContents, permission) => {
+      const allowed = ['media', 'microphone', 'camera', 'clipboard-read', 'clipboard-sanitized-write'];
+      return allowed.includes(permission);
+    });
+
+    sess.setPermissionRequestHandler((webContents, permission, callback) => {
+      const allowed = ['media', 'mediaKeySystem', 'clipboard-read', 'clipboard-sanitized-write'];
+      callback(allowed.includes(permission));
+    });
+  });
+  
   // Register custom protocol for serving fonts
   protocol.registerFileProtocol('fonts', (request, callback) => {
     const url = request.url.replace('fonts://', '');
@@ -6542,7 +6307,6 @@ app.whenReady().then(() => {
   });
   
   // Configure session for better login state persistence
-  const { session } = require('electron');
   const opticsifySession = session.fromPartition('persist:opticsify-session');
   
   // Configure POST data preservation using webRequest API
@@ -6590,20 +6354,19 @@ app.whenReady().then(() => {
     }
   });
   
-  // Configure session settings for better persistence
+  // Allow camera/media and standard web permissions
   opticsifySession.setPermissionRequestHandler((webContents, permission, callback) => {
-    // Allow all permissions for better functionality
-    callback(true);
+    const allowed = ['media', 'mediaKeySystem', 'notifications', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen', 'display-capture'];
+    callback(allowed.includes(permission));
   });
-  
+
+  opticsifySession.setPermissionCheckHandler((webContents, permission) => {
+    const allowed = ['media', 'microphone', 'camera', 'notifications', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen', 'display-capture'];
+    return allowed.includes(permission);
+  });
+
   // Configure session to persist login data
   opticsifySession.setUserAgent(opticsifySession.getUserAgent() + ' opticsifyDesktop/1.0.0');
-  
-  // Enable password saving and autofill
-  opticsifySession.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
-    // Allow all permissions for credential storage
-    return true;
-  });
   
   // Configure protocol handler for better form data persistence
   opticsifySession.protocol.registerHttpProtocol('opticsify-session', (request, callback) => {
@@ -6732,9 +6495,8 @@ app.whenReady().then(() => {
     app.setAppUserModelId('com.opticsify.desktop');
   }
   
-  // Optimize memory usage
-  app.commandLine.appendSwitch('--max-old-space-size', '512');
-  app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=512');
+  // Note: --max-old-space-size must be set before V8 initializes (before app.whenReady),
+  // so it cannot be applied here.
 
   app.on('activate', () => {
     // On macOS, re-create window when dock icon is clicked
