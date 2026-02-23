@@ -537,130 +537,157 @@ async function showSubdomainFormInMainWindow() {
               border-radius: 8px;
             }
           }
-          .language-switcher {
+          /* Language selector dropdown */
+          .lang-selector {
             position: absolute;
             top: 20px;
             right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 10;
+            z-index: 300;
             animation: slideInFromRight 0.6s ease-out 0.2s both;
           }
-          body.rtl .language-switcher {
+          body.rtl .lang-selector {
             right: auto;
             left: 20px;
           }
-          
-          /* Responsive language switcher */
-          @media (max-width: 480px) {
-            .language-switcher {
-              top: 15px;
-              right: 15px;
-              gap: 8px;
-            }
-            body.rtl .language-switcher {
-              left: 15px;
-            }
-          }
-          
-          @media (max-width: 320px) {
-            .language-switcher {
-              top: 10px;
-              right: 10px;
-              gap: 5px;
-            }
-            body.rtl .language-switcher {
-              left: 10px;
-            }
-          }
-          
-          .lang-btn {
-            padding: 8px 12px;
+
+          .lang-trigger {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
             border: 2px solid rgba(59, 130, 246, 0.2);
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            transition: all 0.3s;
             color: #4b5563;
+            transition: all 0.25s;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
           }
-          
-          /* Responsive language buttons */
-          @media (max-width: 480px) {
-            .lang-btn {
-              padding: 6px 10px;
-              font-size: 12px;
-            }
-          }
-          
-          @media (max-width: 320px) {
-            .lang-btn {
-              padding: 5px 8px;
-              font-size: 11px;
-            }
-          }
-          .lang-btn:hover {
+          .lang-trigger:hover {
             border-color: #3B82F6;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.97);
             color: #3B82F6;
           }
-          .lang-btn.active {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            border-color: transparent;
-            color: white;
+          .lang-selector.open .lang-trigger {
+            border-color: #3B82F6;
+            color: #3B82F6;
+          }
+          .lang-chevron {
+            font-size: 12px;
+            transition: transform 0.25s;
+          }
+          .lang-selector.open .lang-chevron {
+            transform: rotate(180deg);
+          }
+
+          .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            background: white;
+            border: 2px solid rgba(59, 130, 246, 0.15);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            display: none;
+          }
+          body.rtl .lang-dropdown {
+            right: auto;
+            left: 0;
+          }
+          .lang-selector.open .lang-dropdown {
+            display: block;
+          }
+
+          .lang-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #4b5563;
+            text-align: left;
+            transition: background 0.15s;
+            white-space: nowrap;
+          }
+          body.rtl .lang-option {
+            text-align: right;
+            flex-direction: row-reverse;
+          }
+          .lang-option:hover {
+            background: rgba(59, 130, 246, 0.07);
+            color: #3B82F6;
+          }
+          .lang-option.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3B82F6;
+            font-weight: 700;
+          }
+          .lang-option .lang-flag {
+            font-size: 18px;
+            line-height: 1;
           }
           
           /* Domain History */
+          .history-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 8px;
+            z-index: 200;
+          }
+
           .history-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 8px 16px;
+            width: 100%;
+            padding: 9px 16px;
             border: 2px solid rgba(59, 130, 246, 0.2);
             background: rgba(255, 255, 255, 0.7);
-            animation: slideInFromLeft 0.6s ease-out 0.2s both;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             transition: all 0.3s;
             color: #4b5563;
-            z-index: 10;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
-          
+
           body.rtl .history-btn {
-            left: auto;
-            right: 20px;
+            text-align: right;
           }
-          
+
           .history-btn:hover {
             border-color: #3B82F6;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             color: #3B82F6;
           }
-          
+
           .history-dropdown {
             position: absolute;
-            top: 60px;
-            left: 20px;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
             background: white;
             border: 2px solid rgba(59, 130, 246, 0.2);
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            min-width: 300px;
-            max-width: 400px;
-            max-height: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-height: 320px;
             overflow-y: auto;
             z-index: 100;
             display: none;
-          }
-          
-          body.rtl .history-dropdown {
-            left: auto;
-            right: 20px;
           }
           
           .history-dropdown.show {
@@ -727,6 +754,14 @@ async function showSubdomainFormInMainWindow() {
           body.rtl .history-domain-info {
             text-align: right;
           }
+
+          body.rtl .history-header {
+            flex-direction: row-reverse;
+          }
+
+          body.rtl .history-item {
+            flex-direction: row-reverse;
+          }
           
           .history-domain {
             font-size: 14px;
@@ -775,6 +810,10 @@ async function showSubdomainFormInMainWindow() {
             transition: all 0.3s;
             font-size: 14px;
             outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
           }
           .domain-type-btn:first-child {
             border-radius: 8px 0 0 8px;
@@ -806,6 +845,9 @@ async function showSubdomainFormInMainWindow() {
           /* RTL support for domain type switcher */
           body.rtl .domain-type-switch {
             direction: ltr;
+            flex-direction: row-reverse;
+          }
+          body.rtl .domain-type-btn {
             flex-direction: row-reverse;
           }
           body.rtl .domain-type-btn:first-child {
@@ -1038,6 +1080,8 @@ async function showSubdomainFormInMainWindow() {
           .form-group {
             margin-bottom: 40px;
             animation: fadeInUp 0.8s ease-out 0.6s both;
+            position: relative;
+            z-index: 10;
           }
           
           /* Responsive form group */
@@ -1266,6 +1310,10 @@ async function showSubdomainFormInMainWindow() {
             animation: fadeInUp 0.8s ease-out 0.7s both;
             position: relative;
             overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
           }
           
           .connect-btn::before {
@@ -1348,6 +1396,17 @@ async function showSubdomainFormInMainWindow() {
           /* RTL support for connect button */
           body.rtl .connect-btn {
             direction: rtl;
+            flex-direction: row-reverse;
+          }
+          body.rtl .connect-btn::before {
+            left: auto;
+            right: -100%;
+            animation: shine-rtl 3s infinite;
+          }
+          @keyframes shine-rtl {
+            0% { right: -100%; }
+            50% { right: 100%; }
+            100% { right: 100%; }
           }
           
           .example {
@@ -1406,194 +1465,41 @@ async function showSubdomainFormInMainWindow() {
           }
           
           .register-link {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(102, 126, 234, 0.15);
             animation: fadeIn 1s ease-out 0.8s both;
-          }
-          
-          /* Responsive register link */
-          @media (max-width: 768px) {
-            .register-link {
-              margin-top: 25px;
-              padding-top: 18px;
-            }
-          }
-          
-          @media (max-width: 480px) {
-            .register-link {
-              margin-top: 20px;
-              padding-top: 15px;
-            }
-          }
-          
-          @media (max-width: 320px) {
-            .register-link {
-              margin-top: 15px;
-              padding-top: 12px;
-            }
-          }
-          
-          /* Height-based register link adjustments */
-          @media (max-height: 700px) {
-            .register-link {
-              margin-top: 20px;
-              padding-top: 15px;
-            }
-          }
-          
-          @media (max-height: 600px) {
-            .register-link {
-              margin-top: 15px;
-              padding-top: 12px;
-            }
-          }
-          
-          @media (max-height: 500px) {
-            .register-link {
-              margin-top: 10px;
-              padding-top: 8px;
-            }
-          }
-          
-          @media (max-height: 400px) {
-            .register-link {
-              margin-top: 8px;
-              padding-top: 6px;
-            }
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
           }
           
           .register-text {
-            font-size: 16px;
-            color: #4b5563;
-            margin-bottom: 10px;
-          }
-          
-          /* Responsive register text */
-          @media (max-width: 480px) {
-            .register-text {
-              font-size: 14px;
-              margin-bottom: 8px;
-            }
-          }
-          
-          @media (max-width: 320px) {
-            .register-text {
-              font-size: 13px;
-              margin-bottom: 6px;
-            }
-          }
-          
-          /* Height-based register text adjustments */
-          @media (max-height: 700px) {
-            .register-text {
-              font-size: 14px;
-              margin-bottom: 8px;
-            }
-          }
-          
-          @media (max-height: 600px) {
-            .register-text {
-              font-size: 13px;
-              margin-bottom: 6px;
-            }
-          }
-          
-          @media (max-height: 500px) {
-            .register-text {
-              font-size: 12px;
-              margin-bottom: 5px;
-            }
-          }
-          
-          @media (max-height: 400px) {
-            .register-text {
-              font-size: 11px;
-              margin-bottom: 4px;
-            }
+            font-size: 14px;
+            color: #9ca3af;
           }
           
           body.rtl .register-link {
-            text-align: center;
             direction: rtl;
           }
-          body.rtl .register-text {
-            text-align: center;
-            direction: rtl;
-          }
-          
+
           .register-btn {
-            background: transparent;
-            color: #3B82F6;
-            border: 2px solid #3B82F6;
-            padding: 12px 30px;
-            font-size: 16px;
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 14px;
             font-weight: 600;
             font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            border-radius: 8px;
+            color: #3B82F6;
             cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-          }
-          
-          /* Responsive register button */
-          @media (max-width: 480px) {
-            .register-btn {
-              padding: 10px 25px;
-              font-size: 14px;
-              border-radius: 6px;
-              width: 100%;
-              text-align: center;
-            }
-          }
-          
-          @media (max-width: 320px) {
-            .register-btn {
-              padding: 8px 20px;
-              font-size: 13px;
-              border-radius: 5px;
-            }
-          }
-          
-          /* Height-based register button adjustments */
-          @media (max-height: 700px) {
-            .register-btn {
-              padding: 10px 25px;
-              font-size: 14px;
-              border-radius: 6px;
-            }
-          }
-          
-          @media (max-height: 600px) {
-            .register-btn {
-              padding: 8px 20px;
-              font-size: 13px;
-              border-radius: 5px;
-            }
-          }
-          
-          @media (max-height: 500px) {
-            .register-btn {
-              padding: 6px 18px;
-              font-size: 12px;
-              border-radius: 4px;
-            }
-          }
-          
-          @media (max-height: 400px) {
-            .register-btn {
-              padding: 5px 15px;
-              font-size: 11px;
-              border-radius: 3px;
-            }
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            transition: color 0.2s;
           }
           .register-btn:hover {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            border-color: transparent;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            color: #8B5CF6;
           }
           
           /* Windows-specific styles */
@@ -1627,10 +1533,6 @@ async function showSubdomainFormInMainWindow() {
               align-items: center !important;
             }
             
-            .register-btn {
-              min-height: 45px !important;
-              display: inline-block !important;
-            }
           }
           
           /* Windows 10/11 specific adjustments */
@@ -1651,9 +1553,6 @@ async function showSubdomainFormInMainWindow() {
               border: 2px solid #e9ecef !important;
             }
             
-            .register-btn {
-              font-weight: 500 !important;
-            }
           }
           
           /* Tabler Icons styling */
@@ -1676,22 +1575,27 @@ async function showSubdomainFormInMainWindow() {
           }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
       </head>
       <body>
         <div class="container">
-          <div class="language-switcher">
-            <button class="lang-btn" id="lang-en"><i class="ti ti-world"></i> English</button>
-            <button class="lang-btn" id="lang-ar"><i class="ti ti-world"></i> العربية</button>
-          </div>
-          <button class="history-btn" id="history-btn" onclick="toggleHistory()">
-            <span id="history-btn-text"><i class="ti ti-clock"></i> Previous Domains</span>
-          </button>
-          <div class="history-dropdown" id="history-dropdown">
-            <div class="history-header">
-              <span id="history-title"><i class="ti ti-clock"></i> Previous Domains</span>
-              <span class="history-clear" onclick="clearAllHistory()" id="history-clear"><i class="ti ti-trash"></i> Clear All</span>
+          <div class="lang-selector" id="lang-selector">
+            <button class="lang-trigger" id="lang-trigger" onclick="toggleLangDropdown()">
+              <i class="ti ti-world"></i>
+              <span id="lang-current">English</span>
+              <i class="ti ti-chevron-down lang-chevron"></i>
+            </button>
+            <div class="lang-dropdown" id="lang-dropdown">
+              <button class="lang-option" id="lang-en" data-lang="en">
+                <span class="lang-flag">🇬🇧</span>
+                <span>English</span>
+              </button>
+              <button class="lang-option" id="lang-ar" data-lang="ar">
+                <span class="lang-flag">🇸🇦</span>
+                <span>العربية</span>
+              </button>
             </div>
-            <div id="history-list"></div>
           </div>
           <div class="logo"><img src="${logoSrc}" alt="opticsify"></div>
           <div class="title" id="title">Enter Your Store Domain</div>
@@ -1711,6 +1615,19 @@ async function showSubdomainFormInMainWindow() {
               <span class="prefix">https://</span>
               <input type="text" id="custom-domain-input" placeholder="mystore.com">
             </div>
+            <div class="history-wrapper">
+              <button class="history-btn" id="history-btn" onclick="toggleHistory()" style="display:none">
+                <i class="ti ti-clock"></i>
+                <span id="history-btn-text">Previous Domains</span>
+              </button>
+              <div class="history-dropdown" id="history-dropdown">
+                <div class="history-header">
+                  <span id="history-title"><i class="ti ti-clock"></i> Previous Domains</span>
+                  <span class="history-clear" onclick="clearAllHistory()" id="history-clear"><i class="ti ti-trash"></i> Clear All</span>
+                </div>
+                <div id="history-list"></div>
+              </div>
+            </div>
             <div class="example" id="example">Example: If your store is "mystore.opticsify.com", enter "mystore"</div>
           </div>
           
@@ -1718,7 +1635,7 @@ async function showSubdomainFormInMainWindow() {
           
           <div class="register-link">
             <div class="register-text" id="register-text">Don't have a store yet?</div>
-            <button class="register-btn" onclick="openRegistration()" id="register-btn"><i class="ti ti-plus"></i> Create Your Store</button>
+            <button class="register-btn" onclick="openRegistration()" id="register-btn">Create Your Store</button>
           </div>
         </div>
         
@@ -1765,7 +1682,7 @@ async function showSubdomainFormInMainWindow() {
               exampleCustom: 'Example: Enter your full domain like "mystore.com"',
               connectBtn: '<i class="ti ti-arrow-right"></i> Connect to Store',
               registerText: "Don't have a store yet?",
-              registerBtn: '<i class="ti ti-plus"></i> Create Your Store',
+              registerBtn: 'Create Your Store',
               errorInvalidSubdomain: 'Please enter a domain to continue',
               errorConnection: 'Connection error. Please try again.',
               errorDialogTitle: 'Invalid Domain',
@@ -1774,7 +1691,7 @@ async function showSubdomainFormInMainWindow() {
               errorDialogButton: 'OK',
               subdomainBtn: '<i class="ti ti-link"></i> Subdomain',
               customBtn: '<i class="ti ti-building-store"></i> Custom Domain',
-              historyBtn: '<i class="ti ti-clock"></i> Previous Domains',
+              historyBtn: 'Previous Domains',
               historyTitle: '<i class="ti ti-clock"></i> Previous Domains',
               historyClear: '<i class="ti ti-trash"></i> Clear All',
               historyEmpty: 'No previous domains',
@@ -1791,7 +1708,7 @@ async function showSubdomainFormInMainWindow() {
               exampleCustom: 'مثال: أدخل نطاقك الكامل مثل "mystore.com"',
               connectBtn: '<i class="ti ti-arrow-left"></i> الاتصال بالمتجر',
               registerText: 'ليس لديك متجر بعد؟',
-              registerBtn: '<i class="ti ti-plus"></i> إنشاء متجرك',
+              registerBtn: 'إنشاء متجرك',
               errorInvalidSubdomain: 'يرجى إدخال نطاق للمتابعة',
               errorConnection: 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
               errorDialogTitle: 'نطاق غير صالح',
@@ -1800,7 +1717,7 @@ async function showSubdomainFormInMainWindow() {
               errorDialogButton: 'موافق',
               subdomainBtn: '<i class="ti ti-link"></i> نطاق فرعي',
               customBtn: '<i class="ti ti-building-store"></i> نطاق مخصص',
-              historyBtn: '<i class="ti ti-clock"></i> النطاقات السابقة',
+              historyBtn: 'النطاقات السابقة',
               historyTitle: '<i class="ti ti-clock"></i> النطاقات السابقة',
               historyClear: '<i class="ti ti-trash"></i> مسح الكل',
               historyEmpty: 'لا توجد نطاقات سابقة',
@@ -1812,39 +1729,8 @@ async function showSubdomainFormInMainWindow() {
           
           // Language switching functionality
           async function switchLanguage(lang) {
-            ////console.log('switchLanguage called with:', lang);
-            
-            // Get current subdomain
-            let subdomain = '';
-            if (window.electronAPI && window.electronAPI.getSubdomain) {
-              subdomain = await window.electronAPI.getSubdomain() || '';
-            }
-            
-            const storageKey = subdomain ? subdomain + '_' : '';
-            
-            // Always save without prefix (for landing page and as fallback)
-            localStorage.setItem('templateCustomizer-vertical-menu-template--Lang', lang);
-            localStorage.setItem('templateCustomizer-vertical-menu-template--Rtl', lang === 'ar' ? 'true' : 'false');
-            // Don't set Style - let web app control theme
-            
-            // Also save with subdomain prefix if subdomain exists
-            if (subdomain) {
-              localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Lang', lang);
-              localStorage.setItem(storageKey + 'templateCustomizer-vertical-menu-template--Rtl', lang === 'ar' ? 'true' : 'false');
-              // Don't set Style - let web app control theme
-            }
-            
-            // Save to Electron store - CRITICAL for transferring to subdomain
-            if (window.electronAPI && window.electronAPI.setLanguage) {
-              try {
-                await window.electronAPI.setLanguage(lang);
-                console.log('Language saved to Electron store:', lang, subdomain ? '(subdomain: ' + subdomain + ')' : '(global - landing page)');
-              } catch (e) {
-                console.error('Error saving language to Electron store:', e);
-              }
-            }
-            
-            // Apply language
+            // Apply language in-place — no reload needed (and reload would fail because
+            // the temp HTML file is deleted after initial load)
             await applyLanguage(lang);
           }
           
@@ -1933,15 +1819,13 @@ async function showSubdomainFormInMainWindow() {
               document.documentElement.setAttribute('lang', 'en');
             }
             
-            // Update active language button
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            const langBtn = document.getElementById('lang-' + lang);
-            if (langBtn) {
-              langBtn.classList.add('active');
-              ////console.log('Active button updated for:', lang);
-            } else {
-              console.error('Language button not found for:', lang);
-            }
+            // Update active language option and trigger label
+            const langLabels = { en: 'English', ar: 'العربية' };
+            const langCurrentEl = document.getElementById('lang-current');
+            if (langCurrentEl) langCurrentEl.textContent = langLabels[lang] || lang;
+            document.querySelectorAll('.lang-option').forEach(btn => {
+              btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
             
             // Replay animations on language switch
             const container = document.querySelector('.container');
@@ -2049,6 +1933,7 @@ async function showSubdomainFormInMainWindow() {
             loadLogo();
             loadBackgroundSVG();
             initializeLanguage();
+            if (window.updateHistoryBtn) window.updateHistoryBtn();
             
             // Add keypress listener for both inputs
             const inputElement = document.getElementById('input');
@@ -2080,29 +1965,28 @@ async function showSubdomainFormInMainWindow() {
               console.error('Custom domain input element not found for keypress listener');
             }
             
-            // Add event listeners for language buttons
-            const langEnBtn = document.getElementById('lang-en');
-            const langArBtn = document.getElementById('lang-ar');
-            
-            if (langEnBtn) {
-              ////console.log('Adding click listener to English button');
-              langEnBtn.addEventListener('click', async () => {
-                ////console.log('English button clicked');
-                await window.switchLanguage('en');
+            // Language selector dropdown toggle
+            window.toggleLangDropdown = function() {
+              const sel = document.getElementById('lang-selector');
+              if (sel) sel.classList.toggle('open');
+            };
+
+            // Add event listeners for language options
+            document.querySelectorAll('.lang-option').forEach(btn => {
+              btn.addEventListener('click', async () => {
+                const lang = btn.dataset.lang;
+                document.getElementById('lang-selector').classList.remove('open');
+                await window.switchLanguage(lang);
               });
-            } else {
-              console.error('English language button not found');
-            }
-            
-            if (langArBtn) {
-              ////console.log('Adding click listener to Arabic button');
-              langArBtn.addEventListener('click', async () => {
-                ////console.log('Arabic button clicked');
-                await window.switchLanguage('ar');
-              });
-            } else {
-              console.error('Arabic language button not found');
-            }
+            });
+
+            // Close lang dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+              const sel = document.getElementById('lang-selector');
+              if (sel && !sel.contains(e.target)) {
+                sel.classList.remove('open');
+              }
+            });
           });
           
           // Use electronAPI from preload script instead of direct require
@@ -2110,6 +1994,19 @@ async function showSubdomainFormInMainWindow() {
             ////console.log('electronAPI available');
             
             // Domain History Management Functions
+
+            // Show or hide the history button depending on whether saved domains exist
+            window.updateHistoryBtn = async function() {
+              const btn = document.getElementById('history-btn');
+              if (!btn) return;
+              try {
+                const history = await window.electronAPI.getDomainHistory();
+                btn.style.display = (history && history.length > 0) ? '' : 'none';
+              } catch (e) {
+                btn.style.display = 'none';
+              }
+            };
+
             window.toggleHistory = async function() {
               const dropdown = document.getElementById('history-dropdown');
               if (dropdown.classList.contains('show')) {
@@ -2127,8 +2024,15 @@ async function showSubdomainFormInMainWindow() {
               
               try {
                 const history = await window.electronAPI.getDomainHistory();
-                
+
+                // Keep button visibility in sync
+                const btn = document.getElementById('history-btn');
+                if (btn) btn.style.display = (history && history.length > 0) ? '' : 'none';
+
                 if (!history || history.length === 0) {
+                  // Close dropdown if now empty
+                  const dropdown = document.getElementById('history-dropdown');
+                  if (dropdown) dropdown.classList.remove('show');
                   historyList.innerHTML = '<div class="history-empty">' + t.historyEmpty + '</div>';
                   return;
                 }
@@ -2201,9 +2105,21 @@ async function showSubdomainFormInMainWindow() {
             
             window.clearAllHistory = async function() {
               const currentLang = localStorage.getItem('templateCustomizer-vertical-menu-template--Lang') || 'en';
-              const t = translations[currentLang];
-              
-              if (confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف جميع النطاقات السابقة؟' : 'Are you sure you want to clear all previous domains?')) {
+              const isAr = currentLang === 'ar';
+
+              const result = await Swal.fire({
+                title: isAr ? 'حذف السجل' : 'Clear History',
+                text: isAr ? 'هل أنت متأكد من حذف جميع النطاقات السابقة؟' : 'Are you sure you want to clear all previous domains?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: isAr ? 'نعم، احذف' : 'Yes, clear',
+                cancelButtonText: isAr ? 'إلغاء' : 'Cancel',
+                reverseButtons: isAr,
+              });
+
+              if (result.isConfirmed) {
                 try {
                   await window.electronAPI.clearDomainHistory();
                   await window.loadHistory();
@@ -2278,27 +2194,24 @@ async function showSubdomainFormInMainWindow() {
             }
             
             function showError(message) {
-              const inputElement = document.getElementById('input');
-              inputElement.focus();
-              document.querySelector('.input-group').style.borderColor = '#dc3545';
-              document.querySelector('.input-group').style.backgroundColor = '#fff5f5';
-              
-              // Show error message
-              let errorMsg = document.getElementById('error-message');
-              if (!errorMsg) {
-                errorMsg = document.createElement('div');
-                errorMsg.id = 'error-message';
-                errorMsg.style.cssText = 'color: #dc3545; font-size: 14px; margin-top: 10px; text-align: center; font-weight: 500;';
-                document.querySelector('.form-group').appendChild(errorMsg);
+              // Highlight the active input briefly
+              const activeInputGroup = document.querySelector('#subdomain-input.input-group') ||
+                                       document.querySelector('.input-group:not([style*="display: none"])');
+              if (activeInputGroup) {
+                activeInputGroup.style.borderColor = '#ef4444';
+                activeInputGroup.style.transition = 'border-color 0.3s';
+                setTimeout(() => { activeInputGroup.style.borderColor = ''; }, 2500);
               }
-              errorMsg.textContent = message;
-              errorMsg.style.display = 'block';
-              
-              setTimeout(() => {
-                document.querySelector('.input-group').style.borderColor = '#e9ecef';
-                document.querySelector('.input-group').style.backgroundColor = '#f8f9fa';
-                if (errorMsg) errorMsg.style.display = 'none';
-              }, 3000);
+
+              Swal.fire({
+                toast: true,
+                position: 'top',
+                icon: 'error',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+              });
             }
             
             // Make connect function global
@@ -2462,28 +2375,43 @@ ipcMain.handle('get-background-svg', async () => {
 
 // Helper function to show SweetAlert2 in the renderer
 async function showSweetAlert(options) {
-  const fs = require('fs');
+  if (!mainWindow || mainWindow.isDestroyed()) return null;
+
   const sweetalert2Path = path.join(__dirname, 'node_modules', 'sweetalert2', 'dist', 'sweetalert2.all.min.js');
   const sweetalert2JS = fs.readFileSync(sweetalert2Path, 'utf8');
-  
-  const scriptToInject = `
-    ${sweetalert2JS}
-    
-    Swal.fire(${JSON.stringify(options)}).then((result) => {
-      window.__swalResult = result;
-    });
-  `;
-  
+  const swalJson = JSON.stringify(sweetalert2JS);
+  const optsJson = JSON.stringify(options);
+
   try {
-    if (mainWindow && mainWindow.webContents) {
-      await mainWindow.webContents.executeJavaScript(scriptToInject);
-      // Wait a bit for the user to see and interact with the alert
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Get the result
-      const result = await mainWindow.webContents.executeJavaScript('window.__swalResult');
-      return result;
+    // Reset state, load Swal if not present, then fire
+    await mainWindow.webContents.executeJavaScript(`
+      window.__swalDone = false;
+      window.__swalResult = undefined;
+      (function() {
+        function _fire() {
+          Swal.fire(${optsJson}).then(function(r) {
+            window.__swalResult = r;
+            window.__swalDone = true;
+          });
+        }
+        if (typeof Swal === 'undefined') {
+          var s = document.createElement('script');
+          s.textContent = ${swalJson};
+          document.head.appendChild(s);
+        }
+        _fire();
+      })();
+    `);
+
+    // Poll every 150 ms until user interacts (up to 5 minutes)
+    for (let i = 0; i < 2000; i++) {
+      await new Promise(r => setTimeout(r, 150));
+      const done = await mainWindow.webContents.executeJavaScript('!!window.__swalDone');
+      if (done) {
+        return await mainWindow.webContents.executeJavaScript('window.__swalResult');
+      }
     }
+    return null;
   } catch (error) {
     console.error('Error showing SweetAlert:', error);
     return null;
@@ -6468,24 +6396,25 @@ app.whenReady().then(() => {
   createMenu();
   createTray();
   
-  // Register global keyboard shortcuts (only in development)
-  if (isDevelopment || enableProductionDebug) {
-    const devToolsShortcut = globalShortcut.register('CommandOrControl+Alt+]', () => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.openDevTools();
-      }
-    });
-    
-    const inspectElementShortcut = globalShortcut.register('CommandOrControl+Shift+I', () => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.openDevTools();
-      }
-    });
-    
-    if (devToolsShortcut && inspectElementShortcut) {
-      console.log('[DEV] Developer Tools shortcuts registered (Ctrl+Alt+] and Ctrl+Shift+I)');
+  // Register DevTools keyboard shortcuts (always available)
+  globalShortcut.register('CommandOrControl+Alt+]', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.openDevTools();
     }
-  }
+  });
+
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.openDevTools();
+    }
+  });
+
+  // F12 as an additional shortcut for inspect element
+  globalShortcut.register('F12', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.openDevTools();
+    }
+  });
   
   // Disable hardware acceleration for better compatibility (optional)
   // app.disableHardwareAcceleration();
