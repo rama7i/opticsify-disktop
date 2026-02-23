@@ -1,0 +1,6 @@
+provider: s3
+bucket: opticsify
+region: me-central-1
+path: /disktop/apps/releases
+endpoint: https://s3.me-central-1.amazonaws.com
+updaterCacheDirName: opticsify-desktop-updater

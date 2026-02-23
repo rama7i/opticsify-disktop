@@ -1,0 +1,177 @@
+{
+  "name": "opticsify-desktop",
+  "version": "1.0.0",
+  "description": "Desktop application for opticsify web platform",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron . --dev",
+    "build": "NODE_ENV=production electron-builder",
+    "build:mac": "NODE_ENV=production electron-builder --mac",
+    "build:win": "NODE_ENV=production electron-builder --win",
+    "build:linux": "NODE_ENV=production electron-builder --linux",
+    "build:all": "NODE_ENV=production electron-builder --mac --win --linux",
+    "dist": "npm run build",
+    "pack": "NODE_ENV=production electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "clean": "rm -rf dist build node_modules/.cache"
+  },
+  "keywords": [
+    "electron",
+    "desktop",
+    "opticsify",
+    "web-app"
+  ],
+  "author": {
+    "name": "opticsify Team",
+    "email": "support@opticsify.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.6.2",
+    "sweetalert2": "^11.26.20"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.opticsify.desktop",
+    "productName": "Opticsify Desktop",
+    "afterSign": "scripts/notarize.js",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "update-ui.js",
+      "app-update.yml",
+      "assets/**/*",
+      "opticsify.png",
+      "!node_modules/.cache",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "compression": "maximum",
+    "asarUnpack": [
+      "app-update.yml"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "type": "development",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "artifactName": "${productName} ${version}-${arch}.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName} Setup ${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Opticsify Desktop ${version}",
+      "icon": "assets/icon.png",
+      "background": "assets/dmg-background.png",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
+}
