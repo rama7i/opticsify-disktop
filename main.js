@@ -1295,6 +1295,44 @@ async function showSubdomainFormInMainWindow() {
             margin-right: 5px;
             direction: ltr;
           }
+
+          /* Custom domain credential fields */
+          .custom-credentials {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+          }
+          .custom-credentials .input-group {
+            margin-top: 0;
+          }
+          .prefix-icon {
+            color: #4b5563;
+            font-size: 16px;
+            margin-right: 8px;
+            flex-shrink: 0;
+          }
+          body.rtl .prefix-icon {
+            margin-right: 0;
+            margin-left: 8px;
+          }
+          .password-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 0 4px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            flex-shrink: 0;
+          }
+          .password-toggle:hover {
+            color: #3B82F6;
+          }
+
           .connect-btn { 
             background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
             color: white;
@@ -1602,7 +1640,7 @@ async function showSubdomainFormInMainWindow() {
           <div class="subtitle" id="subtitle">Enter subdomain or custom domain to continue</div>
           
           <div class="form-group">
-            <div class="domain-type-switch">
+            <div class="domain-type-switch" style="display:none;">
               <button class="domain-type-btn active" id="subdomain-btn" onclick="switchDomainType('subdomain')"><i class="ti ti-link"></i> Subdomain</button>
               <button class="domain-type-btn" id="custom-btn" onclick="switchDomainType('custom')"><i class="ti ti-building-store"></i> Custom Domain</button>
             </div>
@@ -1614,6 +1652,19 @@ async function showSubdomainFormInMainWindow() {
             <div class="input-group" id="custom-input" style="display: none;">
               <span class="prefix">https://</span>
               <input type="text" id="custom-domain-input" placeholder="mystore.com">
+            </div>
+            <div class="custom-credentials" id="custom-credentials">
+              <div class="input-group">
+                <i class="ti ti-user prefix-icon"></i>
+                <input type="text" id="custom-username-input" placeholder="Username or Email" autocomplete="username">
+              </div>
+              <div class="input-group">
+                <i class="ti ti-lock prefix-icon"></i>
+                <input type="password" id="custom-password-input" placeholder="Password" autocomplete="current-password">
+                <button type="button" class="password-toggle" onclick="toggleCustomPassword()" tabindex="-1">
+                  <i class="ti ti-eye" id="custom-password-eye"></i>
+                </button>
+              </div>
             </div>
             <div class="history-wrapper">
               <button class="history-btn" id="history-btn" onclick="toggleHistory()" style="display:none">
@@ -1654,11 +1705,13 @@ async function showSubdomainFormInMainWindow() {
             const exampleEl = document.getElementById('example');
             const currentLang = localStorage.getItem('templateCustomizer-vertical-menu-template--Lang') || 'en';
             
+            const credentialsEl = document.getElementById('custom-credentials');
             if (type === 'subdomain') {
               subdomainBtn.classList.add('active');
               customBtn.classList.remove('active');
               subdomainInput.style.display = 'flex';
               customInput.style.display = 'none';
+              credentialsEl.style.display = 'none';
               document.getElementById('input').focus();
               exampleEl.textContent = translations[currentLang].exampleSubdomain;
             } else {
@@ -1666,8 +1719,21 @@ async function showSubdomainFormInMainWindow() {
               subdomainBtn.classList.remove('active');
               subdomainInput.style.display = 'none';
               customInput.style.display = 'flex';
+              credentialsEl.style.display = 'flex';
               document.getElementById('custom-domain-input').focus();
               exampleEl.textContent = translations[currentLang].exampleCustom;
+            }
+          }
+
+          function toggleCustomPassword() {
+            const input = document.getElementById('custom-password-input');
+            const icon  = document.getElementById('custom-password-eye');
+            if (input.type === 'password') {
+              input.type = 'text';
+              icon.className = 'ti ti-eye-off';
+            } else {
+              input.type = 'password';
+              icon.className = 'ti ti-eye';
             }
           }
           
@@ -1697,7 +1763,9 @@ async function showSubdomainFormInMainWindow() {
               historyEmpty: 'No previous domains',
               historyDelete: '<i class="ti ti-x"></i>',
               historySubdomain: 'Subdomain',
-              historyCustom: 'Custom Domain'
+              historyCustom: 'Custom Domain',
+              placeholderUsername: 'Username or Email',
+              placeholderPassword: 'Password'
             },
             ar: {
               title: 'أدخل نطاق متجرك',
@@ -1723,7 +1791,9 @@ async function showSubdomainFormInMainWindow() {
               historyEmpty: 'لا توجد نطاقات سابقة',
               historyDelete: '<i class="ti ti-x"></i>',
               historySubdomain: 'نطاق فرعي',
-              historyCustom: 'نطاق مخصص'
+              historyCustom: 'نطاق مخصص',
+              placeholderUsername: 'اسم المستخدم أو البريد',
+              placeholderPassword: 'كلمة المرور'
             }
           };
           
@@ -1785,6 +1855,10 @@ async function showSubdomainFormInMainWindow() {
             if (subtitleEl) subtitleEl.textContent = t.subtitle;
             if (inputEl) inputEl.placeholder = t.placeholder;
             if (customInputEl) customInputEl.placeholder = t.placeholderCustom;
+            const usernameEl = document.getElementById('custom-username-input');
+            const passwordEl = document.getElementById('custom-password-input');
+            if (usernameEl) usernameEl.placeholder = t.placeholderUsername;
+            if (passwordEl) passwordEl.placeholder = t.placeholderPassword;
             if (exampleEl) exampleEl.textContent = currentDomainType === 'subdomain' ? t.exampleSubdomain : t.exampleCustom;
             if (connectBtnEl) connectBtnEl.innerHTML = t.connectBtn;
             if (registerTextEl) registerTextEl.textContent = t.registerText;
@@ -2166,9 +2240,18 @@ async function showSubdomainFormInMainWindow() {
                     console.log('Language saved before navigation:', currentLang);
                   }
                   
+                  const username = currentDomainType === 'custom'
+                    ? (document.getElementById('custom-username-input')?.value.trim() || '')
+                    : '';
+                  const password = currentDomainType === 'custom'
+                    ? (document.getElementById('custom-password-input')?.value || '')
+                    : '';
+
                   const result = await window.electronAPI.submitSubdomain({ 
                     value, 
-                    type: currentDomainType 
+                    type: currentDomainType,
+                    username,
+                    password
                   });
                   ////console.log('Domain submission result:', result);
                   
@@ -2694,13 +2777,17 @@ ipcMain.handle('submit-subdomain', async (event, data) => {
   ////console.log('IPC: submit-subdomain called with:', data);
   
   // Support both old (string) and new (object) format
-  let value, type;
+  let value, type, username, password;
   if (typeof data === 'string') {
     value = data;
     type = 'subdomain';
+    username = '';
+    password = '';
   } else {
     value = data.value;
     type = data.type || 'subdomain';
+    username = data.username || '';
+    password = data.password || '';
   }
   
   // Handle domain submission from the form
@@ -2735,6 +2822,12 @@ ipcMain.handle('submit-subdomain', async (event, data) => {
         store.set('customerSubdomain', subdomain);
         store.set('customerDomain', fullDomain);
         store.set('customerDomainType', type);
+
+        // Save credentials for custom domains (keyed by domain for multi-domain support)
+        if (type === 'custom' && username) {
+          store.set(`customDomainCredentials_${cleanedValue}`, { username, password });
+          console.log('Credentials saved for custom domain:', cleanedValue);
+        }
         
         // Transfer language from landing page to subdomain-specific storage
         store.set(`language_${subdomain}`, currentLanguage);
@@ -3910,6 +4003,14 @@ function createWindow() {
   getDomain().then(appUrl => {
     //console.log('getDomain resolved with URL:', appUrl);
     if (mainWindow) {
+      // Always land on /login when opening a saved domain
+      try {
+        const parsed = new URL(appUrl);
+        if (!parsed.pathname.includes('/login')) {
+          parsed.pathname = '/login';
+          appUrl = parsed.toString();
+        }
+      } catch (_) {}
       mainWindow.loadURL(appUrl);
     }
   }).catch(err => {
@@ -5720,6 +5821,79 @@ function createWindow() {
     } catch (err) {
       // Ignore errors in this safety net
       console.error('Error in login page session cleanup:', err);
+    }
+  });
+
+  // Auto-fill credentials on custom domain login pages
+  mainWindow.webContents.on('did-finish-load', async () => {
+    try {
+      const currentUrl = mainWindow.webContents.getURL();
+      if (!currentUrl || currentUrl.startsWith('data:text/html')) return;
+
+      const parsedUrl = new URL(currentUrl);
+      const isLoginPage = parsedUrl.pathname.includes('/login') ||
+                          parsedUrl.pathname.includes('/sign-in') ||
+                          parsedUrl.pathname.includes('/signin') ||
+                          parsedUrl.pathname.endsWith('/login.html');
+
+      // Only run for custom domains (not *.opticsify.com subdomains)
+      if (!isLoginPage || parsedUrl.hostname.endsWith('opticsify.com')) return;
+
+      const domainKey = parsedUrl.hostname;
+      const credentials = store.get(`customDomainCredentials_${domainKey}`);
+      if (!credentials || !credentials.username) return;
+
+      // Wait briefly for the login form to render, then inject
+      await new Promise(r => setTimeout(r, 600));
+
+      await mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const username = ${JSON.stringify(credentials.username)};
+          const password = ${JSON.stringify(credentials.password)};
+
+          // Try common selectors for email/username fields
+          const userSelectors = [
+            'input[name="email"]',
+            'input[type="email"]',
+            'input[name="username"]',
+            'input[name="user"]',
+            'input[id*="email"]',
+            'input[id*="user"]',
+            'input[autocomplete="username"]',
+            'input[autocomplete="email"]'
+          ];
+          const passSelectors = [
+            'input[type="password"]',
+            'input[name="password"]',
+            'input[autocomplete="current-password"]'
+          ];
+
+          function fillField(el, value) {
+            if (!el) return;
+            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            nativeSetter.call(el, value);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          let userEl = null;
+          for (const sel of ${JSON.stringify(userSelectors)}) {
+            userEl = document.querySelector(sel);
+            if (userEl) break;
+          }
+          let passEl = null;
+          for (const sel of ${JSON.stringify(passSelectors)}) {
+            passEl = document.querySelector(sel);
+            if (passEl) break;
+          }
+
+          fillField(userEl, username);
+          fillField(passEl, password);
+        })();
+      `);
+      console.log('Credentials auto-filled for custom domain:', domainKey);
+    } catch (err) {
+      console.error('Error auto-filling credentials:', err);
     }
   });
 
