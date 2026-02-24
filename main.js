@@ -2769,9 +2769,9 @@ ipcMain.handle('submit-subdomain', async (event, data) => {
         ////console.log('Domain saved:', fullDomain);
         ////console.log('IPC: submit-subdomain - stored domain');
         
-        // Load the new domain in the main window
+        // Load the new domain in the main window, land on login page
         if (mainWindow) {
-          mainWindow.loadURL(fullDomain);
+          mainWindow.loadURL(`${fullDomain}/login`);
         }
         
         const result = { success: true, domain: fullDomain };
@@ -3635,9 +3635,9 @@ async function showDomainDialog() {
         ////console.log('Subdomain updated to:', cleanSubdomain);
         ////console.log('Full domain:', fullDomain);
         
-        // Reload the main window with new domain
+        // Reload the main window with new domain, land on login page
         if (mainWindow) {
-          mainWindow.loadURL(fullDomain);
+          mainWindow.loadURL(`${fullDomain}/login`);
         }
       } else {
         showSubdomainErrorDialog(cleanSubdomain);
