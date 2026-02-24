@@ -25,6 +25,8 @@
 	<!-- Required for Electron apps -->
 	<key>NSAppleEventsUsageDescription</key>
 	<string>This app needs to control system events for better user experience.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses your camera for store management features.</string>
 	<key>ElectronAsarIntegrity</key>
 	<false/>
 </dict>

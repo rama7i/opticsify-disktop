@@ -1,6 +1,7 @@
 /**
- * afterPack hook: Remove NSMicrophoneUsageDescription and NSCameraUsageDescription
- * from the built macOS app's Info.plist so the app never triggers system mic/camera prompts.
+ * afterPack hook: Remove NSMicrophoneUsageDescription from the built macOS
+ * app's Info.plist so the app never triggers a system microphone prompt.
+ * NSCameraUsageDescription is intentionally kept so the camera works.
  */
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +22,7 @@ exports.default = async function(context) {
   }
 
   let plist = fs.readFileSync(plistPath, 'utf8');
-  const keysToRemove = ['NSMicrophoneUsageDescription', 'NSCameraUsageDescription'];
+  const keysToRemove = ['NSMicrophoneUsageDescription'];
 
   for (const key of keysToRemove) {
     // Remove <key>KeyName</key> followed by <string>...</string> (with flexible whitespace)
