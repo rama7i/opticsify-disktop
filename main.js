@@ -5081,14 +5081,25 @@ function createWindow() {
           font-style: normal;
         }
         
-        /* Apply Omnes font globally */
-        body, body * {
+        /* Apply Omnes font globally, excluding icon font elements */
+        body,
+        body *:not([class*="fa"]):not([class*=" fa-"]):not([class^="fa-"]):not([class*="ti "]):not([class*=" ti-"]):not([class^="ti-"]):not([class*="glyphicon"]):not([class*="icon-"]) {
           font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
-        
-        /* Preserve specific UI elements that might need system fonts */
+
+        /* Preserve specific UI elements */
         input, textarea, select, button {
           font-family: 'Omnes', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+
+        /* Guarantee icon font families are never clobbered */
+        .fa, [class*=" fa-"], [class^="fa-"] {
+          font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome' !important;
+          font-style: normal;
+        }
+        .ti, [class*=" ti-"], [class^="ti-"] {
+          font-family: 'tabler-icons' !important;
+          font-style: normal;
         }
         
         /* Hide desktop app download button */
@@ -6219,20 +6230,22 @@ app.whenReady().then(() => {
     });
   });
   
-  // Register custom protocol for serving fonts
-  protocol.registerFileProtocol('fonts', (request, callback) => {
-    const url = request.url.replace('fonts://', '');
-    const fontPath = path.join(__dirname, 'assets', 'fonts', url);
-    console.log('Font request:', url, '=> Path:', fontPath);
-    
-    // Check if file exists
+  // Register custom protocol for serving fonts — must be registered for every
+  // session that loads font:// URLs (default + the persistent opticsify session).
+  const fontProtocolHandler = (request, callback) => {
+    const raw = request.url.replace(/^fonts:\/\//, '').replace(/\/$/, '');
+    const fontName = decodeURIComponent(raw);
+    const fontPath = path.join(__dirname, 'assets', 'fonts', fontName);
     if (fs.existsSync(fontPath)) {
       callback({ path: fontPath });
     } else {
       console.error('Font file not found:', fontPath);
       callback({ error: -6 }); // FILE_NOT_FOUND
     }
-  });
+  };
+
+  protocol.registerFileProtocol('fonts', fontProtocolHandler);
+  session.fromPartition('persist:opticsify-session').protocol.registerFileProtocol('fonts', fontProtocolHandler);
   
   // Configure session for better login state persistence
   const opticsifySession = session.fromPartition('persist:opticsify-session');
