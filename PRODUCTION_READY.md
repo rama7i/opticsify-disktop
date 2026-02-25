@@ -181,12 +181,12 @@ node -p "require('./package.json').version"
 
 ### List S3 Files:
 ```bash
-aws s3 ls s3://opticsify/disktop/apps/releases/ --region me-south-1
+aws s3 ls s3://opticsify/disktop/apps/releases/ --region me-central-1
 ```
 
 ### Download latest-mac.yml from S3:
 ```bash
-curl https://s3.me-south-1.amazonaws.com/opticsify/disktop/apps/releases/latest-mac.yml
+curl https://s3.me-central-1.amazonaws.com/opticsify/disktop/apps/releases/latest-mac.yml
 ```
 
 ### Check App Version (after build):
@@ -232,7 +232,7 @@ curl https://s3.me-south-1.amazonaws.com/opticsify/disktop/apps/releases/latest-
 
 ### S3 Configuration
 - Bucket: `opticsify`
-- Region: `me-south-1`
+- Region: `me-central-1`
 - Path: `disktop/apps/releases/`
 - All files must have public-read ACL
 

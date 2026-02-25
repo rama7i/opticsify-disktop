@@ -1,4 +1,4 @@
-// Update UI System for Opticsify Desktop
+// Update UI System for opticsify Desktop
 (function() {
     'use strict';
     
@@ -12,7 +12,7 @@
     const translations = {
         en: {
             updateAvailable: 'Update Available',
-            updateMessage: 'A new version of Opticsify Desktop is available.',
+            updateMessage: 'A new version of opticsify Desktop is available.',
             version: 'Version',
             later: 'Later',
             download: 'Download',
@@ -28,7 +28,7 @@
         },
         ar: {
             updateAvailable: 'تحديث متاح',
-            updateMessage: 'إصدار جديد من Opticsify Desktop متاح.',
+            updateMessage: 'إصدار جديد من opticsify Desktop متاح.',
             version: 'الإصدار',
             later: 'لاحقاً',
             download: 'تحميل',

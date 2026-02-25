@@ -3172,7 +3172,7 @@ ipcMain.handle('download-update', async () => {
       fileName = `opticsify-Desktop-${newVersion}.AppImage`;
     }
     
-    downloadUrl = `https://s3.me-south-1.amazonaws.com/opticsify/disktop/apps/releases/${fileName}`;
+    downloadUrl = `https://s3.me-central-1.amazonaws.com/opticsify/disktop/apps/releases/${fileName}`;
     
     console.log(`Selected file: ${fileName}`);
     console.log(`Download URL: ${downloadUrl}`);
